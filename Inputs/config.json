@@ -1,0 +1,58 @@
+{
+  "source": {
+    "type": "file",
+    "name": "Invoice Generation Inputs.xlsx"
+  },
+  "tabs": {
+    "invoices": "Invoices To Generate",
+    "clients": "Client Master",
+    "providers": "Service Provider Master",
+    "settings": null
+  },
+  "columns": {
+    "invoices": {
+      "client": "Client",
+      "currency": "Currency",
+      "amount": "Amount",
+      "item": "Item Description",
+      "notes": "Notes to put in Invoice",
+      "month": "Include in Invoice Name",
+      "provider": null,
+      "po": "PO Number",
+      "hsn": "HSN/SAC",
+      "qty": null
+    },
+    "clients": {
+      "short": "Client Name (Short)",
+      "legal": "Client Name (Legal)",
+      "provider": "Service  Provider",
+      "gstin": "GSTIN",
+      "place": "Place",
+      "gsttype": "GST type",
+      "gstpct": "GST %",
+      "terms": "Payment Terms",
+      "withheld": "Amount Withheld?",
+      "whpct": "% withheld",
+      "po": "PO Neeeded?",
+      "active": "Active?",
+      "address": null
+    },
+    "providers": {
+      "short": "Service Provider (Short)",
+      "legal": "Service Provider  (Legal)",
+      "address": "Address",
+      "gstin": "GSTIN",
+      "phone": "Phone",
+      "email": "Email",
+      "account": null,
+      "ifsc": null,
+      "account_name": null,
+      "website": null,
+      "bank": null,
+      "branch": null,
+      "swift": null,
+      "acc_type": null,
+      "account_text": "Account Details"
+    }
+  }
+}

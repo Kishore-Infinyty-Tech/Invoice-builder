@@ -1,0 +1,911 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Invoice Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f7fb;--surface:#ffffff;--raise:#fafbfd;--ink:#0b1324;--ink2:#2b3750;--muted:#667085;--faint:#98a2b3;
+  --line:#e6e9f0;--line2:#d5dae5;
+  --brand:#1d5fd1;--brand-h:#174fb3;--brand-soft:#eaf1fd;
+  --ok:#067647;--ok-soft:#e7f6ee;--warn:#935a07;--warn-soft:#fcf1dd;--err:#b42318;--err-soft:#fdecea;
+  --gold-soft:#fbf1d6;--gold:#7d5600;--blue-soft:#e6eefc;--blue:#1a4fb0;
+  --sh1:0 1px 2px rgba(16,24,40,.05);--sh2:0 1px 2px rgba(16,24,40,.05),0 6px 18px rgba(16,24,40,.07);--sh3:0 24px 60px rgba(16,24,40,.18);
+  --r:14px;--r2:10px;--ease:cubic-bezier(.22,1,.36,1);
+  --glow:radial-gradient(1100px 380px at 50% -140px,rgba(29,95,209,.11),transparent 70%);
+}
+[data-theme="dark"]{
+  --bg:#070a11;--surface:#0e1320;--raise:#121927;--ink:#eef2fa;--ink2:#c5cde0;--muted:#8d98b0;--faint:#6a748c;
+  --line:#1b2334;--line2:#27314a;
+  --brand:#4f8dff;--brand-h:#6ba0ff;--brand-soft:#11203f;
+  --ok:#3ecf8e;--ok-soft:#0d2a1e;--warn:#f0b24b;--warn-soft:#2d220c;--err:#ff7b70;--err-soft:#2f1613;
+  --gold-soft:#2d230a;--gold:#f1c460;--blue-soft:#12223f;--blue:#8db8ff;
+  --sh1:0 1px 2px rgba(0,0,0,.4);--sh2:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.4);--sh3:0 24px 60px rgba(0,0,0,.6);
+  --glow:radial-gradient(1100px 380px at 50% -140px,rgba(79,141,255,.14),transparent 70%);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+::selection{background:color-mix(in srgb,var(--brand) 28%,transparent)}
+body{margin:0;font-family:Inter,"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.5;color:var(--ink);background:var(--glow),var(--bg);background-repeat:no-repeat;
+  min-height:100dvh;-webkit-font-smoothing:antialiased;font-feature-settings:"cv11","ss01";transition:background-color .3s,color .3s}
+svg.i{width:1.15em;height:1.15em;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none;vertical-align:-.2em}
+.num{font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:8px}
+.k{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* ---------- header ---------- */
+.top{position:sticky;top:0;z-index:30;height:60px;background:color-mix(in srgb,var(--surface) 82%,transparent);backdrop-filter:blur(14px) saturate(1.5);border-bottom:1px solid var(--line)}
+.top .in{max-width:1240px;height:100%;margin:0 auto;padding:0 28px;display:flex;align-items:center;gap:18px}
+.top img{height:30px;display:block}
+[data-theme="dark"] .top img{background:#fff;border-radius:8px;padding:4px 9px;height:34px}
+.brandtxt{font-weight:600;color:var(--ink2);font-size:14px;padding-left:18px;border-left:1px solid var(--line2);line-height:20px}
+.stepper{display:flex;align-items:center;gap:10px;margin-left:auto}
+.st{display:flex;align-items:center;gap:9px;color:var(--faint);font-weight:500;font-size:13px;transition:color .3s;white-space:nowrap}
+.st b{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;border:1px solid var(--line2);font-size:11px;font-weight:600;transition:all .3s var(--ease);background:var(--surface)}
+.st.on{color:var(--ink);font-weight:600}.st.on b{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.st.done{color:var(--ink2)}.st.done b{background:var(--brand-soft);border-color:transparent;color:var(--brand)}
+.sep{width:26px;height:1px;background:var(--line2);position:relative}
+.sep::after{content:"";position:absolute;inset:0;background:var(--brand);transform:scaleX(0);transform-origin:left;transition:transform .5s var(--ease)}
+.sep.fill::after{transform:scaleX(1)}
+.iconbtn{display:grid;place-items:center;width:34px;height:34px;padding:0;border-radius:var(--r2);font-size:16px}
+#homeBtn{margin-left:6px;padding:7px 12px;font-size:13px;white-space:nowrap;flex:none}
+.top img,.brandtxt{cursor:pointer}
+
+main{max-width:1240px;margin:0 auto;padding:32px 28px 90px}
+section.view{display:none}
+section.view.show{display:block;animation:viewIn .45s var(--ease) both}
+@keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ---------- buttons ---------- */
+button,.btn{font:inherit;font-weight:500;font-size:13.5px;border-radius:var(--r2);padding:9px 15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;line-height:20px;
+  background:var(--surface);color:var(--ink);border:1px solid var(--line2);box-shadow:var(--sh1);transition:background-color .15s,border-color .15s,box-shadow .2s,transform .15s var(--ease),color .15s;text-decoration:none}
+button:hover:not(:disabled),.btn:hover{background:var(--raise);border-color:color-mix(in srgb,var(--ink) 22%,var(--line2))}
+button:active:not(:disabled){transform:translateY(1px)}
+button:disabled{color:var(--faint);background:var(--raise);border-color:var(--line);box-shadow:none;cursor:not-allowed}
+button.pri,.btn.pri{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600;box-shadow:0 1px 2px rgba(16,24,40,.15),inset 0 1px 0 rgba(255,255,255,.18)}
+button.pri:hover:not(:disabled),.btn.pri:hover{background:var(--brand-h);border-color:var(--brand-h)}
+button.pri:disabled{background:var(--line);border-color:var(--line);color:var(--faint);box-shadow:none}
+button.ok{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
+button.ok:hover:not(:disabled){background:var(--ok);filter:brightness(1.08)}
+button.no{background:var(--surface);border-color:color-mix(in srgb,var(--err) 40%,var(--line2));color:var(--err);font-weight:600}
+button.no:hover:not(:disabled){background:var(--err-soft)}
+button.lg,.btn.lg{padding:12px 20px;font-size:14.5px}
+button.sm,.btn.sm{padding:5px 10px;font-size:12.5px;gap:6px}
+
+/* ---------- hero ---------- */
+.hero{position:relative;overflow:hidden;border-radius:20px;padding:46px 52px;color:#fff;box-shadow:var(--sh2);display:grid;grid-template-columns:1.3fr .7fr;gap:30px;align-items:center;
+  background:radial-gradient(700px 320px at 92% -10%,rgba(236,190,90,.20),transparent 60%),linear-gradient(155deg,#0a1530 0%,#0f2556 58%,#14397e 100%)}
+.hero::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:36px 36px;
+  -webkit-mask-image:radial-gradient(ellipse at 70% 30%,#000 10%,transparent 70%);mask-image:radial-gradient(ellipse at 70% 30%,#000 10%,transparent 70%)}
+.hero>*{position:relative}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#c9d6f3;margin-bottom:18px}
+.eyebrow i{width:6px;height:6px;border-radius:50%;background:#ecbe5a;box-shadow:0 0 0 4px rgba(236,190,90,.18)}
+.hero h1{margin:0 0 14px;font-family:"Instrument Serif",Georgia,"Times New Roman",serif;font-weight:400;font-size:clamp(34px,4.2vw,54px);line-height:1.04;letter-spacing:-.015em}
+.hero h1 em{font-style:italic;color:#f1cd7d}
+.hero p{margin:0 0 24px;color:#b9c7e6;max-width:500px;font-size:15px;line-height:1.6}
+.feats{display:flex;gap:22px;flex-wrap:wrap}
+.feats span{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:#d5def2;font-weight:500}
+.feats svg{color:#ecbe5a}
+.mock{justify-self:center;width:min(260px,100%);aspect-ratio:210/280;background:#fff;border-radius:12px;padding:20px 18px;color:#0b1324;box-shadow:0 30px 70px rgba(0,0,0,.4);transform:rotate(3deg);animation:floaty 9s ease-in-out infinite}
+.mock .bar{height:4px;border-radius:3px;background:linear-gradient(90deg,#0b1324,#1d5fd1,#ecbe5a);margin-bottom:16px}
+.mock .t{font-family:"Instrument Serif",Georgia,serif;font-size:22px;letter-spacing:.14em;margin-bottom:12px}
+.mock .ln{height:6px;border-radius:4px;background:#e9edf5;margin:8px 0}.mock .ln.s{width:52%}.mock .ln.m{width:76%}
+.mock .tot{position:absolute;display:flex;justify-content:space-between;font-weight:600;font-size:12.5px;border-top:1px solid #0b1324;padding-top:9px;left:18px;right:18px;bottom:20px}
+.mock{position:relative}
+@keyframes floaty{0%,100%{transform:rotate(3deg) translateY(0)}50%{transform:rotate(2deg) translateY(-8px)}}
+
+/* ---------- file tiles ---------- */
+.sectitle{display:flex;align-items:baseline;gap:12px;margin:32px 0 14px}
+.sectitle h2{margin:0;font-size:16px;font-weight:600;letter-spacing:-.005em}
+.sectitle span{color:var(--muted);font-size:13px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--sh1);transition:border-color .2s,box-shadow .25s,transform .25s var(--ease);display:flex;flex-direction:column;gap:6px;min-height:190px}
+.tile:hover{border-color:var(--line2);box-shadow:var(--sh2);transform:translateY(-1px)}
+.tile.drag{border-color:var(--brand);border-style:dashed;background:var(--brand-soft)}
+.tile .ico{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-size:17px;margin-bottom:8px}
+.ico.a{background:var(--brand-soft);color:var(--brand)}.ico.b{background:var(--gold-soft);color:var(--gold)}.ico.c{background:#efeafd;color:#6a44d4}.ico.d{background:var(--ok-soft);color:var(--ok)}
+[data-theme="dark"] .ico.c{background:#201a3d;color:#b3a0ff}
+.tile h3{margin:0;font-size:14.5px;font-weight:600}
+.tile .sub{color:var(--muted);font-size:12.5px;line-height:1.4}
+.tile .stat{display:flex;flex-wrap:wrap;gap:6px;min-height:24px;align-items:center;margin-top:6px}
+.tile .act{margin-top:auto;padding-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.tile img.prev{height:30px;max-width:100%;object-fit:contain;align-self:flex-start}
+.chip{display:inline-flex;align-items:center;gap:5px;border-radius:6px;padding:2px 8px;font-size:11.5px;font-weight:600;line-height:18px}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}.chip.err{background:var(--err-soft);color:var(--err)}.chip.warn{background:var(--warn-soft);color:var(--warn)}.chip.info{background:var(--brand-soft);color:var(--brand)}.chip.mut{background:var(--raise);color:var(--muted);border:1px solid var(--line)}
+.prov{display:inline-flex;align-items:center;font-weight:600;font-size:11.5px;letter-spacing:.04em;padding:2px 8px;border-radius:6px;line-height:18px}
+.prov.IAC{background:var(--gold-soft);color:var(--gold)}.prov.ITGS{background:var(--blue-soft);color:var(--blue)}.prov.none{background:var(--err-soft);color:var(--err)}
+.cta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:26px}
+.msg{display:none;margin-top:14px;padding:11px 14px;border-radius:var(--r2);background:var(--err-soft);color:var(--err);font-weight:500;align-items:flex-start;gap:10px;font-size:13.5px;border:1px solid color-mix(in srgb,var(--err) 18%,transparent)}
+.msg.show{display:flex}.msg.info{background:var(--brand-soft);color:var(--brand);border-color:color-mix(in srgb,var(--brand) 18%,transparent)}
+
+/* ---------- KPI strip ---------- */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh1);margin-bottom:28px}
+.kpi{padding:20px 24px;border-left:1px solid var(--line);min-width:0}
+.kpi:first-child{border-left:0}
+.kpi .v{font-size:28px;font-weight:600;letter-spacing:-.02em;line-height:1.15;margin-top:6px}
+.kpi .s{color:var(--muted);font-size:12.5px;margin-top:2px}
+.kpi .v.bad{color:var(--err)}.kpi .v.good{color:var(--ok)}
+.kpi .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.toolbar h2{margin:0;font-size:20px;font-weight:600;letter-spacing:-.015em;display:flex;align-items:center;gap:10px;margin-right:6px}
+.toolbar .grow{flex:1}
+.sumtxt{font-weight:500;font-size:13px;color:var(--ok);display:inline-flex;align-items:center;gap:6px}
+.sumtxt.bad{color:var(--err)}
+
+/* ---------- invoice table ---------- */
+.list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh1);overflow:hidden}
+.lh,.inv .hd{display:grid;grid-template-columns:36px minmax(150px,1.1fr) minmax(200px,1.7fr) 74px 150px minmax(190px,1.3fr) 24px;gap:18px;align-items:center;padding:0 22px}
+.lh{padding-top:11px;padding-bottom:11px;background:var(--raise);border-bottom:1px solid var(--line)}
+.lh .r{text-align:right}
+.inv{border-bottom:1px solid var(--line);position:relative;animation:fadeRow .5s var(--ease) both;animation-delay:calc(var(--i)*40ms)}
+.inv:last-child{border-bottom:0}
+.noanim .inv{animation:none}
+@keyframes fadeRow{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.inv .hd{padding-top:15px;padding-bottom:15px;cursor:pointer;transition:background-color .15s}
+.inv .hd:hover{background:var(--raise)}
+.inv.bad{background:color-mix(in srgb,var(--err-soft) 45%,var(--surface));box-shadow:inset 3px 0 0 var(--err)}
+.inv.warn{box-shadow:inset 3px 0 0 var(--warn)}
+.no{color:var(--faint);font-size:12px;font-weight:500}
+.cl b{display:block;font-weight:600;font-size:14px}.cl span{color:var(--muted);font-size:12.5px}
+.it{color:var(--ink2);font-size:13px;line-height:1.45}
+.it em{display:block;font-style:normal;font-size:12px;color:var(--muted);margin-top:2px}
+.amt{text-align:right;font-weight:600;font-size:14.5px}.amt small{display:block;font-size:12px;color:var(--muted);font-weight:400;margin-top:1px}
+.chev{color:var(--faint);transition:transform .3s var(--ease);font-size:16px;justify-self:end}
+.inv.open .chev{transform:rotate(180deg);color:var(--ink)}
+.chips{display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+.panel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s var(--ease)}
+.inv.open .panel{grid-template-rows:1fr}
+.panel>div{overflow:hidden}
+.opt{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;padding:18px 22px 20px 76px;background:var(--raise);border-top:1px solid var(--line)}
+.opt label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+input,select{font:inherit;font-size:13.5px;padding:8px 11px;border:1px solid var(--line2);border-radius:var(--r2);background:var(--surface);color:var(--ink);min-width:0;transition:border-color .15s,box-shadow .15s;box-shadow:var(--sh1)}
+input:focus,select:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 22%,transparent)}
+input[readonly]{background:var(--raise);color:var(--ink2)}
+.inline{display:inline-flex;gap:8px;align-items:center}
+.inline input[type=checkbox]{width:18px;height:18px;accent-color:var(--brand);box-shadow:none}
+.calc{margin-left:auto;text-align:right;font-size:12.5px;color:var(--muted)}
+.calc b{display:block;font-size:20px;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+
+/* ---------- review ---------- */
+.rtabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:14px;scrollbar-width:thin}
+.rtab{padding:6px 12px;border-radius:8px;font-size:12.5px;font-weight:500;white-space:nowrap;gap:7px;box-shadow:none;background:transparent;border-color:transparent;color:var(--muted)}
+.rtab:hover:not(:disabled){background:var(--surface);border-color:var(--line)}
+.rtab.cur{background:var(--surface);border-color:var(--line2);color:var(--ink);box-shadow:var(--sh1)}
+.rtab .d{width:7px;height:7px;border-radius:50%;background:var(--line2)}
+.rtab.ok .d{background:var(--ok)}.rtab.no .d{background:var(--err)}
+.review{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(340px,.8fr);gap:20px;align-items:start}
+.viewer{background:var(--raise);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:var(--sh1)}
+.viewer .cap{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12.5px;padding:0 4px 12px}
+.viewer iframe{width:100%;height:76vh;border:0;border-radius:8px;background:#fff;box-shadow:0 1px 3px rgba(16,24,40,.12),0 14px 40px rgba(16,24,40,.12)}
+.side{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh1);padding:22px;position:sticky;top:80px}
+.progress{height:3px;border-radius:3px;background:var(--line);overflow:hidden;margin:-2px 0 18px}
+.progress i{display:block;height:100%;background:var(--brand);width:0;transition:width .6s var(--ease)}
+.side .big{font-size:26px;font-weight:600;letter-spacing:-.02em;line-height:1.15;margin:12px 0 2px}
+.kv{width:100%;border-collapse:collapse;margin:14px 0 18px}
+.kv td{padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top}.kv td:first-child{color:var(--muted);width:42%}.kv td:last-child{font-weight:500;text-align:right}
+.kv tr.sect td{padding:16px 0 6px;border-bottom:1px solid var(--line2);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);text-align:left}
+.kv tr.tot td{font-size:15px;font-weight:600;border-bottom:0;padding-top:12px}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.nav2{display:flex;gap:8px;margin-top:10px}.nav2 button{flex:1}
+.kbd{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:5px;border:1px solid var(--line2);border-bottom-width:2px;background:var(--raise);font-size:10.5px;font-weight:600;color:var(--muted)}
+.hintrow{color:var(--faint);font-size:12px;margin-top:14px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.editbox{border:1px solid var(--line);border-radius:12px;margin:0 0 16px;background:var(--raise)}
+.editbox summary{cursor:pointer;padding:11px 14px;font-weight:600;font-size:13px;display:flex;align-items:center;gap:9px;list-style:none;user-select:none}
+.editbox summary::-webkit-details-marker{display:none}
+.editbox summary::after{content:"";margin-left:auto;width:8px;height:8px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg);transition:transform .25s var(--ease)}
+.editbox[open] summary::after{transform:rotate(225deg)}
+.egrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:4px 14px 14px}
+.egrid .full{grid-column:1/3}
+.egrid label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+.egrid .chk{display:flex;align-items:center;gap:9px;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink);font-weight:500;margin:0;align-self:end;padding-bottom:9px}
+.egrid .chk input{width:18px;height:18px;accent-color:var(--brand);box-shadow:none}
+.egrid input:not([type=checkbox]){width:100%}
+.editbox>.pri,.editbox>.msg{margin:0 14px 14px;width:calc(100% - 28px)}
+.slide{animation:slideIn .35s var(--ease) both}
+@keyframes slideIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+
+/* ---------- done ---------- */
+.donecard{max-width:640px;margin:24px auto 0;text-align:center;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:46px 40px 36px;box-shadow:var(--sh2)}
+.checkwrap{width:64px;height:64px;margin:0 auto 20px;border-radius:50%;background:var(--ok-soft);display:grid;place-items:center;position:relative}
+.checkwrap::after{content:"";position:absolute;inset:-8px;border-radius:50%;border:1px solid var(--ok);opacity:0;animation:ringOut 1.4s .3s ease-out forwards}
+.checkwrap svg{width:30px;height:30px;stroke:var(--ok);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:30;stroke-dashoffset:30;animation:draw .6s .2s var(--ease) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}@keyframes ringOut{0%{opacity:.7;transform:scale(.8)}100%{opacity:0;transform:scale(1.4)}}
+.donecard h2{font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:42px;letter-spacing:-.01em;margin:0 0 4px;line-height:1.1}
+.files{text-align:left;margin:22px 0 24px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.file{display:flex;align-items:center;gap:12px;padding:11px 14px;border-top:1px solid var(--line);color:var(--ink);text-decoration:none;font-size:13px;font-weight:500;transition:background-color .15s;animation:fadeRow .5s var(--ease) both;animation-delay:calc(var(--i)*60ms)}
+.file:first-child{border-top:0}
+.file:hover{background:var(--raise);color:var(--brand)}
+.file span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file svg{color:var(--faint)}
+canvas#fx{position:fixed;inset:0;pointer-events:none;z-index:80}
+
+/* ---------- import wizard ---------- */
+select{appearance:none;-webkit-appearance:none;padding-right:34px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2398a2b3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;cursor:pointer}
+.wiz .card-pop{width:min(940px,96vw);max-height:92vh;display:flex;flex-direction:column;text-align:left;padding:0;overflow:hidden;border-radius:22px}
+.wiz-h{display:flex;align-items:center;gap:14px;padding:20px 28px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,var(--raise),var(--surface))}
+.whi{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:var(--brand-soft);color:var(--brand);font-size:20px;flex:none;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--brand) 14%,transparent)}
+.wiz-h h3{margin:0;font-size:17px;font-weight:600;letter-spacing:-.01em;line-height:1.25}
+.wsub{color:var(--muted);font-size:12.5px;margin-top:1px}
+.wsteps{display:flex;align-items:center;gap:10px;margin-left:auto}
+.ws{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--faint);font-weight:500;white-space:nowrap}
+.ws b{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;border:1px solid var(--line2);font-size:11px;font-weight:600;background:var(--surface);transition:all .3s var(--ease)}
+.ws.on{color:var(--ink);font-weight:600}.ws.on b{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.ws.done{color:var(--ink2)}.ws.done b{background:var(--brand-soft);border-color:transparent;color:var(--brand)}
+.wsl{width:24px;height:1px;background:var(--line2)}
+.wiz-x{width:34px;height:34px;padding:0;border-radius:9px;box-shadow:none;border-color:transparent;background:transparent;color:var(--muted);margin-left:6px}
+.wiz-x:hover:not(:disabled){background:var(--raise);border-color:var(--line)}
+.wiz-b{padding:20px 28px 22px;overflow:auto;flex:1;animation:fadeRow .4s var(--ease) both}
+.wiz-f{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:14px 28px;border-top:1px solid var(--line);background:var(--raise)}
+.wiz-f .note{margin:0 auto;color:var(--muted);font-size:12.5px;display:flex;align-items:center;gap:7px}
+.wiz-f .note.ok{color:var(--ok)}.wiz-f .note.bad{color:var(--err)}
+.wiz .lead{margin:0 0 16px;color:var(--muted);font-size:13.5px;line-height:1.55}
+
+/* segmented switch + drop zone */
+.seg{display:inline-flex;padding:4px;border-radius:12px;background:var(--raise);border:1px solid var(--line);gap:4px;margin-bottom:16px}
+.segb{box-shadow:none;border-color:transparent;background:transparent;color:var(--muted);padding:8px 16px;border-radius:9px;font-weight:600}
+.segb:hover:not(:disabled){background:transparent;border-color:transparent;color:var(--ink)}
+.segb.on{background:var(--surface);color:var(--ink);box-shadow:var(--sh1);border-color:var(--line)}
+.drop{border:1.5px dashed var(--line2);border-radius:14px;padding:26px 24px;text-align:center;background:var(--raise);cursor:pointer;transition:border-color .25s,background-color .25s,transform .25s var(--ease);display:flex;flex-direction:column;align-items:center;gap:4px}
+.drop:hover,.drop.drag{border-color:var(--brand);background:var(--brand-soft)}
+.drop.drag{transform:scale(1.01)}
+.dico{width:50px;height:50px;border-radius:15px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;font-size:23px;color:var(--brand);box-shadow:var(--sh1);margin-bottom:8px;transition:transform .35s var(--ease)}
+.drop:hover .dico{transform:translateY(-3px)}
+.dt{font-weight:600;font-size:15.5px;letter-spacing:-.01em}.ds{color:var(--muted);font-size:13.5px}.ds u{color:var(--brand);text-decoration:none;font-weight:600}
+.dn{color:var(--muted);font-size:12.5px;max-width:480px;margin-top:8px;line-height:1.5}
+.fmts{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.fmt{font-size:11px;font-weight:600;letter-spacing:.06em;padding:2px 8px;border-radius:6px;background:var(--surface);border:1px solid var(--line2);color:var(--ink2)}
+.drop.ok{border-style:solid;border-color:color-mix(in srgb,var(--ok) 42%,var(--line));background:color-mix(in srgb,var(--ok-soft) 55%,var(--surface));cursor:default}
+.drop.ok .dico{background:var(--ok);color:#fff;border-color:transparent;box-shadow:0 6px 16px color-mix(in srgb,var(--ok) 35%,transparent)}
+.drop.ok .chips2{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:8px 0 2px}
+.gbox{border:1px solid var(--line);border-radius:14px;padding:22px 24px;background:var(--raise)}
+.glabel{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.ginput{display:flex;gap:10px}
+.ginput .wrap{position:relative;flex:1}
+.ginput .wrap svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--faint)}
+.ginput input{width:100%;height:42px;padding-left:38px}
+.ginput button{height:42px}
+.how{margin:18px 0 0;padding:0;list-style:none;display:grid;gap:9px;color:var(--ink2);font-size:13px}
+.how li{display:flex;gap:11px;align-items:flex-start;line-height:1.5}
+.how li i{font-style:normal;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--brand-soft);color:var(--brand);font-size:11px;font-weight:700;flex:none;margin-top:1px}
+
+/* optional files */
+.klabel{display:flex;align-items:center;gap:10px;margin:20px 0 10px}
+.klabel .k{white-space:nowrap}.klabel i{height:1px;background:var(--line);flex:1}
+.opts3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.ofile{border:1px solid var(--line);border-radius:12px;padding:14px 14px 12px;background:var(--surface);display:flex;flex-direction:column;gap:6px;transition:border-color .2s,box-shadow .25s,transform .25s var(--ease);box-shadow:var(--sh1);min-width:0}
+.ofile:hover,.ofile.drag{border-color:var(--line2);box-shadow:var(--sh2);transform:translateY(-1px)}
+.ofile.drag{border-color:var(--brand);background:var(--brand-soft)}
+.ofile.ok{border-color:color-mix(in srgb,var(--ok) 42%,var(--line))}
+.ofile .oh{display:flex;align-items:center;gap:10px;font-weight:600;font-size:13.5px;min-width:0}
+.ofile .oh span.t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.oico{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--brand-soft);color:var(--brand);font-size:15px;flex:none}
+.ofile.ok .oico{background:var(--ok-soft);color:var(--ok)}
+.ofile .fmts{justify-content:flex-start;margin-top:2px}
+.ofile .od{color:var(--muted);font-size:12.5px;line-height:1.45;min-height:36px}
+.ofile .of{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px;min-height:28px}
+.ofile .of .chip{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* step 2: tab cards */
+.rcard{display:grid;grid-template-columns:270px minmax(230px,320px) 1fr;gap:20px;align-items:start;padding:16px 18px;border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:10px;box-shadow:var(--sh1)}
+.rl{display:flex;gap:12px;align-items:flex-start}
+.rl b{display:block;font-size:14px;font-weight:600;line-height:1.3}
+.rl .rs{color:var(--muted);font-size:12.5px;line-height:1.45;margin-top:2px}
+.rr select{width:100%}
+.rr .chip{margin-top:8px}
+.tabhead{display:flex;gap:5px;flex-wrap:wrap}
+.tabhead span{font-size:11.5px;color:var(--muted);background:var(--raise);border:1px solid var(--line);border-radius:5px;padding:1px 7px;line-height:18px}
+.rc .k{margin-bottom:7px;display:block}
+.req{color:var(--err);margin-left:3px}
+
+/* step 3: column mapping */
+.sumbar{display:flex;align-items:center;gap:16px;padding:12px 16px;border:1px solid var(--line);border-radius:12px;background:var(--raise);margin-bottom:16px}
+.sumbar .tx{font-size:13px;white-space:nowrap}.sumbar .tx b{font-size:15px}
+.sumbar .progress{flex:1;margin:0}
+.sumbar .progress i{background:var(--brand)}
+.sumbar.full .progress i{background:var(--ok)}
+.role{border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden;background:var(--surface);box-shadow:var(--sh1)}
+.role>h4{margin:0;padding:12px 16px;background:var(--raise);font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line)}
+.role>h4 .chip{margin-left:auto}
+.maptbl{width:100%;border-collapse:collapse}
+.maptbl th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding:9px 16px;border-bottom:1px solid var(--line)}
+.maptbl td{padding:8px 16px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+.maptbl tr:last-child td{border-bottom:0}
+.maptbl select{width:100%;height:38px}
+.maptbl td.f{width:260px;font-weight:500}
+.maptbl td.f .ok{color:var(--ok);margin-right:8px;vertical-align:-.25em}
+.maptbl td.f .dot{display:inline-block;width:14px;height:14px;margin-right:8px;vertical-align:-.2em}
+.maptbl td.c{width:300px}
+.maptbl .ex{color:var(--muted);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+select.need{border-color:var(--err);background-color:var(--err-soft)}
+
+/* optional cards: one skeleton (header, text, body, footer pinned to the bottom) */
+.ofile{gap:10px;padding:16px}
+.ofile .od{min-height:38px;margin:0}
+.ofile .of{margin-top:auto;padding-top:2px;min-height:32px}
+.pvbox{flex:1;min-height:92px;display:grid;place-items:center;padding:10px;border:1.5px dashed var(--line2);border-radius:10px;background:var(--raise);cursor:pointer;text-align:center;transition:border-color .2s,background-color .2s}
+.pvbox:hover,.ofile.drag .pvbox{border-color:var(--brand);background:var(--brand-soft)}
+.pvbox.has{background:#fff;border-style:solid;border-color:var(--line)}
+.pvbox img{max-width:100%;max-height:68px;object-fit:contain}
+.pvbox .hint{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--muted);font-size:12.5px}
+.pvbox .hint>svg{font-size:19px;color:var(--faint)}
+.pvbox .hint .fmts{margin:0}
+/* manual entry: last invoice numbers */
+.lrows{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin:2px 0 4px}
+.lrow{display:flex;align-items:center;gap:10px;margin:0;min-width:0}
+.lrow input{min-width:0;width:0}
+.lrow .prov{min-width:54px;justify-content:center;padding:6px 8px;font-size:12px}
+.lrow input{flex:1;height:36px;font-size:13px;font-variant-numeric:tabular-nums}
+.lrow input.pname{flex:none;width:70px;text-transform:uppercase;font-weight:600;text-align:center}
+.ofile .od{min-height:0}
+@media (max-width:860px){.opts3{grid-template-columns:1fr}.rcard{grid-template-columns:1fr}.wsteps .ws span{display:none}.maptbl td.f,.maptbl td.c{width:auto}}
+
+/* ---------- overlay / modal / toast ---------- */
+.overlay{position:fixed;inset:0;z-index:70;display:none;place-items:center;background:rgba(7,10,17,.5);backdrop-filter:blur(6px)}
+.overlay.show{display:grid;animation:fade .25s}
+@keyframes fade{from{opacity:0}}
+.card-pop{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:30px 32px;width:min(400px,92vw);box-shadow:var(--sh3);text-align:center;animation:pop .4s var(--ease)}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.98)}}
+.ring{width:72px;height:72px;margin:0 auto 16px;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke-width:4;stroke-linecap:round}
+.ring .bg{stroke:var(--line)}.ring .fg{stroke:var(--brand);stroke-dasharray:226;stroke-dashoffset:226;transition:stroke-dashoffset .4s linear}
+.ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:15px;font-weight:600}
+.modal .card-pop{text-align:left;width:min(620px,94vw)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid2 .full{grid-column:1/3}
+.grid2 label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}.grid2 input{width:100%}
+#toasts{position:fixed;right:20px;bottom:20px;z-index:90;display:grid;gap:8px}
+.toast{display:flex;align-items:center;gap:10px;background:#0b1324;color:#fff;padding:11px 16px;border-radius:10px;box-shadow:var(--sh3);font-weight:500;font-size:13px;animation:toastIn .4s var(--ease)}
+[data-theme="dark"] .toast{background:#e9eef9;color:#0b1324}
+.toast.ok svg{color:#4ade9a}.toast.err svg{color:#ff8a80}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}}
+
+@media (max-width:1100px){
+  .tiles{grid-template-columns:repeat(2,1fr)}.kpis{grid-template-columns:repeat(2,1fr)}.kpi:nth-child(3){border-left:0}.kpi:nth-child(n+3){border-top:1px solid var(--line)}
+  .hero{grid-template-columns:1fr;padding:34px 28px}.mock{display:none}
+  .lh{display:none}
+  .inv .hd{grid-template-columns:30px 1fr 120px 24px;grid-template-areas:"n c a ch" ". it it it" ". p s s";gap:6px 14px;padding-top:14px;padding-bottom:14px}
+  .inv .hd>.no{grid-area:n}.inv .hd>.cl{grid-area:c}.inv .hd>.it{grid-area:it}.inv .hd>.pv{grid-area:p}.inv .hd>.amt{grid-area:a}.inv .hd>.chips{grid-area:s}.inv .hd>.chev{grid-area:ch}
+  .opt{padding-left:22px}.review{grid-template-columns:1fr}.side{position:static}.viewer iframe{height:70vh}
+  .stepper .st span{display:none}.brandtxt{display:none}
+}
+@media (max-width:560px){#homeBtn span{display:none}#homeBtn{padding:7px 9px}.tiles,.kpis{grid-template-columns:1fr}.kpi{border-left:0!important;border-top:1px solid var(--line)}.kpi:first-child{border-top:0}main{padding:20px 14px 70px}.top .in{padding:0 14px}.donecard{padding:32px 18px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<header class="top"><div class="in">
+ <img id="hlogo" src="/logo-ui" alt="Infinyty">
+ <span class="brandtxt">Invoice Studio</span>
+ <nav class="stepper" aria-label="Progress">
+  <div class="st on" id="s1"><b>1</b><span>Inputs</span></div><i class="sep" id="p1"></i>
+  <div class="st" id="s2"><b>2</b><span>Invoices</span></div><i class="sep" id="p2"></i>
+  <div class="st" id="s3"><b>3</b><span>Review</span></div><i class="sep" id="p3"></i>
+  <div class="st" id="s4"><b>4</b><span>Download</span></div>
+ </nav>
+ <button class="sm" id="homeBtn" aria-label="Start again and go to the home page" title="Back to the home page"><i data-ic="home"></i><span>Start again</span></button>
+ <button class="iconbtn" id="themeBtn" aria-label="Switch between light and dark theme" title="Switch theme"></button>
+</div></header>
+
+<main>
+<!-- ================= 1 INPUTS ================= -->
+<section id="v1" class="view show">
+ <div class="hero">
+  <div>
+   <div class="eyebrow"><i></i>Automated invoicing</div>
+   <h1>Invoices, ready in <em>one click.</em></h1>
+   <p>Your Excel is read, validated and turned into polished PDF invoices in seconds. Review each one, approve, and download the lot.</p>
+   <div class="feats" id="heroPills"></div>
+  </div>
+  <div class="mock" aria-hidden="true"><div class="bar"></div><div class="t">INVOICE</div>
+   <div class="ln m"></div><div class="ln s"></div><div class="ln"></div><div class="ln m"></div><div class="ln s"></div><div class="tot"><span>Total due</span><span>INR 1,08,000</span></div></div>
+ </div>
+
+ <div class="sectitle"><h2>Input files</h2><span>Your files stay on this computer</span></div>
+ <div class="tiles">
+  <div class="tile" data-drop="inputs"><div class="ico a" data-ic="sheet"></div><h3>Your data</h3><div class="sub">Excel workbook or Google Sheet: invoices, clients and providers</div><div class="stat" id="stInputs">Checking...</div><div class="act" id="actInputs"></div></div>
+  <div class="tile" data-drop="logo"><div class="ico b" data-ic="image"></div><h3>Logo</h3><div class="sub">One logo on every invoice</div><div class="stat" id="stLogo"></div>
+   <div class="act"><button class="sm" id="upLogo"><i data-ic="upload"></i>Upload</button></div></div>
+  <div class="tile" data-drop="signature"><div class="ico c" data-ic="pen"></div><h3>Signature</h3><div class="sub">Optional. A transparent PNG works best</div><div class="stat" id="stSign"></div>
+   <div class="act"><button class="sm" id="upSign"><i data-ic="upload"></i>Upload</button></div></div>
+  <div class="tile"><div class="ico d" data-ic="hash"></div><h3>Last invoice numbers</h3><div class="sub">New numbers continue from here</div><div class="stat" id="stLast"></div></div>
+ </div>
+ 
+ <div class="cta" id="cta"></div>
+ <div class="msg" id="m1" role="alert"></div>
+</section>
+
+<!-- ================= 2 INVOICES ================= -->
+<section id="v2" class="view">
+ <div class="kpis" id="stats"></div>
+ <div class="toolbar">
+  <h2>Invoices to generate</h2><span class="sumtxt" id="selSum"></span><span class="grow"></span>
+  <button id="reloadBtn"><i data-ic="refresh"></i>Reload</button>
+  <button id="filesBtn"><i data-ic="folder"></i>Input files</button>
+  <button class="pri lg" id="genBtn"><i data-ic="zap"></i>Generate all invoices</button>
+ </div>
+ <div class="msg" id="m2" role="alert" style="margin:0 0 14px"></div>
+ <div class="list" id="list"></div>
+</section>
+
+<!-- ================= 3 REVIEW ================= -->
+<section id="v3" class="view">
+ <div class="toolbar"><h2>Review each invoice</h2><span class="grow"></span>
+  <span class="hintrow" style="margin:0"><span><span class="kbd">&larr;</span> <span class="kbd">&rarr;</span> move</span><span><span class="kbd">C</span> correct</span><span><span class="kbd">I</span> incorrect</span></span></div>
+ <div class="rtabs" id="pills"></div>
+ <div class="review">
+  <div class="viewer"><div class="cap"><i data-ic="file"></i><span id="fileCap"></span></div><iframe id="pdf" title="Generated invoice"></iframe></div>
+  <div class="side" id="sidebox">
+   <div class="progress" aria-hidden="true"><i id="revBar"></i></div>
+   <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span id="provBadge"></span><span class="chip mut" id="verdict"></span></div>
+   <div class="big num" id="revNum"></div><div style="color:var(--muted)" id="revClient"></div>
+   <table class="kv" id="kv"></table>
+   <details class="editbox" id="editbox"><summary><span data-ic="pen"></span>Edit this invoice</summary>
+    <div class="egrid">
+     <label class="chk"><input type="checkbox" id="eWhOn"> Withholding applies</label>
+     <div><label for="eWhPct">Withheld %</label><input id="eWhPct" inputmode="decimal" placeholder="10"></div>
+     <div class="full"><label for="eWhLabel">Withholding line text</label><input id="eWhLabel"></div>
+     <div><label for="eTerms">Terms of payment</label><input id="eTerms" list="termsList" placeholder="e.g. Net30" autocomplete="off"></div>
+     <div><label for="eDate">Invoice date</label><input type="date" id="eDate"></div>
+     <div class="full"><label for="ePlace">Place of supply</label><input id="ePlace"></div>
+    </div>
+    <button class="pri" id="eApply" style="width:100%"><span data-ic="refresh"></span>Update this invoice</button>
+    <div class="msg" id="mEdit" role="alert"></div>
+   </details>
+   <div class="acts"><button class="ok lg" id="okBtn"><i data-ic="check"></i>Correct</button><button class="no lg" id="noBtn"><i data-ic="x"></i>Incorrect</button></div>
+   <div class="nav2"><button id="prevBtn"><i data-ic="left"></i>Previous</button><button id="nextBtn">Next<i data-ic="right"></i></button></div>
+   <div class="hintrow"><span id="finHint"></span></div>
+   <button class="pri lg" id="finBtn" style="width:100%;margin-top:12px" disabled><i data-ic="download"></i>Finish and download</button>
+   <div style="margin-top:10px;color:var(--faint);font-size:12px">Incorrect invoices are left out of the download. Their numbers are not reused.</div>
+   <div class="msg" id="m3" role="alert"></div>
+  </div>
+ </div>
+</section>
+
+<!-- ================= 4 DONE ================= -->
+<section id="v4" class="view">
+ <div class="donecard">
+  <div class="checkwrap"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+  <h2>All set</h2><div id="doneSub" style="color:var(--muted)"></div>
+  <div id="doneBody"></div>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+   <button id="openBtn"><i data-ic="folder"></i>Open Outputs folder</button><button id="againBtn"><i data-ic="refresh"></i>Start again</button></div>
+ </div>
+</section>
+</main>
+
+<!-- generating overlay -->
+<div class="overlay" id="busy" role="dialog" aria-modal="true" aria-label="Generating invoices"><div class="card-pop">
+ <div class="ring"><svg viewBox="0 0 80 80"><circle class="bg" cx="40" cy="40" r="36"/><circle class="fg" id="ringFg" cx="40" cy="40" r="36"/></svg><b class="num" id="ringTxt">0%</b></div>
+ <h3 style="margin:0 0 4px;font-size:17px;font-weight:600" id="busyTitle">Creating your invoices</h3>
+ <div style="color:var(--muted);min-height:22px" id="busyMsg">Reading the Excel...</div>
+</div></div>
+
+<!-- add client modal -->
+<div class="overlay modal" id="modal" role="dialog" aria-modal="true" aria-label="Add client"><div class="card-pop">
+ <h3 style="margin:0 0 2px;font-size:17px;font-weight:600">Add client to the Client Master</h3>
+ <div style="color:var(--muted);margin-bottom:16px;font-size:13px">This writes a new row to the Client Master tab of your Excel.</div>
+ <div class="grid2" id="cform"></div><div class="msg" id="mc" role="alert"></div>
+ <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px"><button id="cCancel">Cancel</button><button class="pri" id="cSave"><i data-ic="check"></i>Save client</button></div>
+</div></div>
+<!-- import wizard -->
+<div class="overlay wiz" id="wiz" role="dialog" aria-modal="true" aria-labelledby="wizTitle"><div class="card-pop">
+ <div class="wiz-h"><span class="whi" data-ic="upload"></span>
+  <div><h3 id="wizTitle">Add your data</h3><div class="wsub" id="wizSub"></div></div>
+  <div class="wsteps" id="wsteps"></div>
+  <button class="wiz-x" id="wizClose" aria-label="Close"><i data-ic="x"></i></button></div>
+ <div class="wiz-b" id="wizBody"></div>
+ <div class="wiz-f" id="wizFoot"></div>
+</div></div>
+<input type="file" id="wzFileIn" accept=".xlsx" hidden>
+<input type="file" id="wzLogoIn" accept=".png,.jpg,.jpeg,.webp,image/*" hidden>
+<input type="file" id="wzSignIn" accept=".png,.jpg,.jpeg,.webp,image/*" hidden>
+<datalist id="termsList"><option value="Net7"><option value="Net15"><option value="Net30"><option value="Net45"><option value="Net60"><option value="Net90"></datalist>
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+/* ---------------- icons (Lucide paths, inline so it works offline) ---------------- */
+const P={
+ sheet:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 13h2"/><path d="M14 13h2"/><path d="M8 17h2"/><path d="M14 17h2"/>',
+ file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+ image:'<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
+ pen:'<path d="M12 20h9"/><path d="M16.4 3.6a1 1 0 0 1 3 3L7.4 18.6a2 2 0 0 1-.9.5l-2.9.8a.5.5 0 0 1-.6-.6l.8-2.9a2 2 0 0 1 .5-.9z"/>',
+ hash:'<line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/>',
+ upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/>',
+ download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+ zap:'<path d="M4 14a1 1 0 0 1-.8-1.6l9.9-10.2a.5.5 0 0 1 .9.4l-1.9 6A1 1 0 0 0 13 10h7a1 1 0 0 1 .8 1.6l-9.9 10.2a.5.5 0 0 1-.9-.4l1.9-6A1 1 0 0 0 11 14z"/>',
+ check:'<polyline points="20 6 9 17 4 12"/>',x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+ warn:'<path d="m21.7 18-8-14a2 2 0 0 0-3.5 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+ alert:'<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>',
+ chev:'<path d="m6 9 6 6 6-6"/>',refresh:'<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+ folder:'<path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/>',
+ left:'<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',right:'<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.9 4.9 1.4 1.4"/><path d="m17.7 17.7 1.4 1.4"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.3 17.7-1.4 1.4"/><path d="m19.1 4.9-1.4 1.4"/>',
+ moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+ shield:'<path d="M20 13c0 5-3.5 7.5-7.7 8.9a1 1 0 0 1-.6 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.2-2.7a1.2 1.2 0 0 1 1.5 0C14.5 3.8 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+ home:'<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .7-1.5l7-6a2 2 0 0 1 2.6 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+ receipt:'<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
+ building:'<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/>',
+ link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+ plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',clock:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'
+};
+const ic=n=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${P[n]||''}</svg>`;
+function paintIcons(root=document){root.querySelectorAll('[data-ic]').forEach(e=>{if(!e.dataset.done){e.innerHTML=ic(e.dataset.ic);e.dataset.done=1}})}
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------------- theme ---------------- */
+function setTheme(t){document.documentElement.dataset.theme=t;$('themeBtn').innerHTML=ic(t==='dark'?'sun':'moon');try{localStorage.setItem('theme',t)}catch(e){}}
+(function(){let t;try{t=localStorage.getItem('theme')}catch(e){}if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';setTheme(t)})();
+$('themeBtn').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+
+/* ---------------- helpers ---------------- */
+let CURV=1;
+function show(n){CURV=n;for(let i=1;i<=4;i++){const v=$('v'+i);v.classList.remove('show');if(i==n){void v.offsetWidth;v.classList.add('show')}
+  $('s'+i).className='st'+(i==n?' on':(i<n?' done':''));$('s'+i).querySelector('b').innerHTML=i<n?ic('check'):i;if(i<4)$('p'+i).classList.toggle('fill',i<n)}
+ window.scrollTo({top:0,behavior:reduced?'auto':'smooth'})}
+function msg(id,t,info){const m=$(id);m.className='msg'+(t?' show':'')+(info?' info':'');m.innerHTML=t?ic(info?'clock':'alert')+`<span>${esc(t)}</span>`:''}
+function toast(t,type='ok'){const d=document.createElement('div');d.className='toast '+type;d.innerHTML=ic(type==='ok'?'check':'alert')+`<span>${esc(t)}</span>`;$('toasts').appendChild(d);setTimeout(()=>{d.style.transition='all .3s';d.style.opacity=0;d.style.transform='translateY(8px)';setTimeout(()=>d.remove(),300)},3600)}
+async function post(url,body){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});return r.json()}
+const fmt=(v,c)=>c==='INR'?Number(v).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}):Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const cur=c=>c==='INR'?'₹':c==='USD'?'$':c==='EUR'?'€':c==='GBP'?'£':c+' ';
+const addDays=(iso,n)=>{const d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return d.toLocaleDateString('en-GB')};
+const days=t=>{const m=/(\d+)/.exec(t||'');return m?+m[1]:null};
+function countUp(el,to,money,c){if(reduced||!isFinite(to)){el.textContent=money?cur(c)+fmt(to,c):to;return}
+ const t0=performance.now(),D=800;const step=t=>{const k=Math.min(1,(t-t0)/D),e=1-Math.pow(1-k,3),v=to*e;el.textContent=money?cur(c)+fmt(v,c):Math.round(v);if(k<1)requestAnimationFrame(step)};requestAnimationFrame(step)}
+
+/* ---------------- confetti (small and quiet) ---------------- */
+function confetti(){if(reduced)return;const cv=$('fx'),x=cv.getContext('2d');cv.width=innerWidth;cv.height=innerHeight;
+ const cols=['#1d5fd1','#ecbe5a','#3ecf8e','#9db8ee'];
+ const ps=Array.from({length:70},()=>({x:innerWidth/2+(Math.random()-.5)*120,y:innerHeight*.32,vx:(Math.random()-.5)*11,vy:-Math.random()*11-3,r:Math.random()*5+3,c:cols[Math.random()*cols.length|0],a:Math.random()*6,va:(Math.random()-.5)*.3}));
+ let f=0;(function loop(){x.clearRect(0,0,cv.width,cv.height);ps.forEach(p=>{p.vy+=.36;p.x+=p.vx;p.y+=p.vy;p.vx*=.985;p.a+=p.va;x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillStyle=p.c;x.globalAlpha=Math.max(0,1-f/110);x.fillRect(-p.r/2,-p.r/4,p.r,p.r/2);x.restore()});
+  if(++f<120)requestAnimationFrame(loop);else x.clearRect(0,0,cv.width,cv.height)})()}
+
+/* ---------------- state ---------------- */
+let FRESH=false;
+let ROWS=[],NUMS={},TODAY='',RES=[],BATCH='',VERD={},CUR=0,OPEN=new Set(),FIRST=true;
+
+/* ================= STEP 1: files ================= */
+async function upload(kind,file){const r=await fetch('/api/upload?kind='+kind,{method:'POST',headers:{'X-Filename':encodeURIComponent(file.name)},body:file});return r.json()}
+async function doUpload(kind,f){msg('m1','Uploading '+f.name+'...',true);const r=await upload(kind,f);if(!r.ok){msg('m1',r.error);toast(r.error,'err');return}msg('m1','');toast(f.name+' uploaded');await refreshStatus()}
+function pick(btn,input,kind){$(btn).onclick=()=>$(input).click();$(input).onchange=async e=>{const f=e.target.files[0];e.target.value='';if(f)await doUpload(kind,f)}}
+['upLogo','upSign'].forEach(id=>$(id).onclick=()=>openWiz(1));
+document.querySelectorAll('.tile[data-drop]').forEach(t=>{
+ t.addEventListener('dragover',e=>{e.preventDefault();t.classList.add('drag')});t.addEventListener('dragleave',()=>t.classList.remove('drag'));
+ t.addEventListener('drop',async e=>{e.preventDefault();t.classList.remove('drag');const f=e.dataTransfer.files[0];if(f){if(t.dataset.drop==='inputs'){openWiz(1);await wzFile(f)}else await doUpload(t.dataset.drop,f)}})});
+async function refreshStatus(){
+ const s=await (await fetch('/api/status')).json();paintHome(s);return s}
+function paintHome(s){
+ window.ASSET={logo:s.logo,sign:s.signature,v:s.logo_v,sv:s.sign_v};
+ window.LASTNUM=(s.inputs&&s.inputs.last_numbers)||window.LASTNUM||{};
+ const m=s.inputs,src=s.source||{type:'file'},have=!!m,live=have&&!FRESH;
+ $('stInputs').innerHTML=FRESH?`<span class="chip mut">Nothing uploaded yet</span>`:m?`<span class="chip ok">${ic('check')}Found</span>${src.type==='google'?`<span class="chip info">${ic('link')}Google Sheet</span>`:''}<span class="chip mut">${m.invoices} invoices</span><span class="chip mut">${m.clients} clients</span>${m.providers.map(p=>`<span class="prov ${esc(p)}">${esc(p)}</span>`).join('')}${m.unfilled?`<span class="chip warn">${ic('warn')}${m.unfilled} detail(s) empty</span>`:''}`:`<span class="chip err">${ic('alert')}${esc(s.inputs_error||'Not found')}</span>`;
+ $('actInputs').innerHTML=`<button class="sm pri" data-wiz>${ic('upload')}Upload</button>`+(live&&src.type!=='google'?`<a class="btn sm" href="/download-input/inputs">${ic('download')}Download</a>`:'');
+ $('stLast').innerHTML=m&&Object.keys(m.last_numbers).length?Object.entries(m.last_numbers).map(([k,v])=>`<span class="prov ${esc(k)}">${esc(k)}</span><span class="chip mut num">${esc(v)}</span>`).join(''):`<span class="chip err">${ic('alert')}Not set</span>`;
+ $('stLogo').innerHTML=s.logo?`<img class="prev" src="/logo-ui?v=${s.logo_v}" alt="Logo">`:`<span class="chip err">${ic('alert')}No logo yet</span>`;
+ $('hlogo').src='/logo-ui?v='+s.logo_v;
+ $('stSign').innerHTML=s.signature?`<span class="chip ok">${ic('check')}Uploaded</span>`:`<span class="chip warn">${ic('warn')}None, the box stays blank</span>`;
+ $('heroPills').innerHTML=live?`<span>${ic('check')}${m.invoices} invoices ready</span><span>${ic('check')}${m.clients} clients on file</span><span>${ic('check')}Checked automatically</span>`:`<span>${ic('upload')}Upload your Excel or Google Sheet to begin</span>`;
+ $('cta').innerHTML=live?`<button class="pri lg" id="loadBtn">Load invoices${ic('right')}</button><button class="lg" data-wiz>${ic('upload')}Upload new data</button><span class="chip mut">${ic('shield')}Your data is re-read every time</span>`
+  :`<button class="pri lg" data-wiz>${ic('upload')}Upload your data</button>`+(have?`<button class="lg" id="loadBtn">Use the data saved last time</button>`:'');
+ paintIcons($('v1'))}
+
+/* ================= STEP 2: invoices ================= */
+async function loadInvoices(){
+ msg('m1','Reading your data...',true);const lb=$('loadBtn');if(lb)lb.disabled=true;$('reloadBtn').disabled=true;
+ const r=await post('/api/load',{});if(lb)lb.disabled=false;$('reloadBtn').disabled=false;
+ if(!r.ok){msg('m1',r.error);show(1);return false}
+ msg('m1','');FRESH=false;ROWS=r.rows;NUMS=r.numbers;TODAY=r.today;OPEN=new Set();FIRST=true;
+ ROWS.forEach(x=>{x.sel=false;x.date=TODAY;x.numEdited=false;
+  if(x.defaults){x.place=x.defaults.place;x.terms=x.defaults.terms;x.wh_on=x.defaults.wh_on;x.wh_pct=x.defaults.wh_pct??'';x.wh_label=x.defaults.wh_label}});
+ renderAll();show(2);return true}
+$('reloadBtn').onclick=loadInvoices;$('filesBtn').onclick=()=>{refreshStatus();show(1)};
+
+function rowErrors(x){const e=[...x.errors];
+ if(x.wh_on&&!(parseFloat(x.wh_pct)>0))e.push('Withholding % missing. Enter it in the details.');
+ if(x.defaults&&days(x.terms)==null)e.push('Terms must look like Net30.');return e}
+function predicted(){const cnt={},out={};
+ ROWS.forEach(x=>{if(!x.sel||!x.provider)return;const n=NUMS[x.provider];if(!n)return;const i=cnt[x.provider]||0;out[x.id]=n.seq[i]||'';cnt[x.provider]=i+1});return out}
+function calc(x){if(!x.defaults||x.amount==null)return null;
+ const r2=v=>Math.round((v+1e-9)*100)/100,tax=x.defaults.tax.reduce((s,t)=>s+r2(x.amount*t.pct/100),0),wh=x.wh_on?r2(x.amount*(parseFloat(x.wh_pct)||0)/100):0;return{tax:r2(tax),wh,bal:r2(x.amount+tax-wh)}}
+
+function renderStats(animate){
+ const ok=ROWS.filter(x=>x.sel).length,bad=ROWS.length-ok,warn=ROWS.filter(x=>!rowErrors(x).length&&x.warnings.length).length;
+ const tot={};ROWS.forEach(x=>{const c=calc(x);if(c)tot[x.currency]=(tot[x.currency]||0)+c.bal});
+ const prov={};ROWS.forEach(x=>{if(x.provider)prov[x.provider]=(prov[x.provider]||0)+1});
+ const cs=Object.keys(tot);
+ $('stats').innerHTML=`
+  <div class="kpi"><div class="k">Invoices</div><div class="v num" data-cn="${ROWS.length}">${ROWS.length}</div><div class="s">read from your Excel</div></div>
+  <div class="kpi"><div class="k">Total due</div><div class="v num" ${cs[0]?`data-cu="${tot[cs[0]]}" data-c="${cs[0]}"`:''}>${cs[0]?cur(cs[0])+fmt(tot[cs[0]],cs[0]):'0'}</div><div class="s num">${cs.slice(1).map(c=>cur(c)+fmt(tot[c],c)).join(' &middot; ')||'&nbsp;'}</div></div>
+  <div class="kpi"><div class="k">Providers</div><div class="chips">${Object.entries(prov).map(([k,v])=>`<span class="prov ${esc(k)}">${esc(k)} &times; ${v}</span>`).join('')||'-'}</div><div class="s" style="margin-top:12px">${Object.keys(prov).length} issuing companies</div></div>
+  <div class="kpi"><div class="k">Status</div><div class="v ${bad?'bad':'good'}">${bad?bad+' to fix':'All clear'}</div><div class="s">${bad?'Red rows block the run':'Ready to generate'}${warn?` &middot; ${warn} warning${warn>1?'s':''}`:''}</div></div>`;
+ if(animate){$('stats').querySelectorAll('[data-cn]').forEach(e=>countUp(e,+e.dataset.cn));$('stats').querySelectorAll('[data-cu]').forEach(e=>countUp(e,+e.dataset.cu,true,e.dataset.c))}
+ $('selSum').className='sumtxt'+(bad?' bad':'');
+ $('selSum').innerHTML=bad?`${ic('alert')}${bad} row${bad>1?'s':''} need attention`:`${ic('check')}${ok} ready`;
+ $('genBtn').disabled=bad>0||ok==0;$('genBtn').innerHTML=ic('zap')+(bad?'Generate all invoices':`Generate ${ok} invoice${ok>1?'s':''}`)}
+
+function renderList(){
+ const pr=predicted(),list=$('list');list.className='list'+(FIRST?'':' noanim');
+ let html=`<div class="lh k"><span>#</span><span>Client</span><span>Description</span><span>Provider</span><span class="r">Amount</span><span>Status</span><span></span></div>`;
+ list.innerHTML=html;
+ ROWS.forEach((x,k)=>{const errs=rowErrors(x),bad=errs.length>0,c=calc(x),open=OPEN.has(x.id);
+  const chips=(bad?errs.map(e=>`<span class="chip err">${ic('alert')}${esc(e)}</span>`).join(''):`<span class="chip ok">${ic('check')}Ready</span>`)+x.warnings.map(w=>`<span class="chip warn">${ic('warn')}${esc(w)}</span>`).join('')+(x.client_missing?`<button class="sm" data-add="${x.id}">${ic('plus')}Add client</button>`:'');
+  const d=document.createElement('div');d.className='inv '+(bad?'bad':(x.warnings.length?'warn':''))+(open?' open':'');d.style.setProperty('--i',k);
+  let opts='';
+  if(x.defaults){
+   const places=x.defaults.places.length>1?`<select data-f="place" data-id="${x.id}">${x.defaults.places.map(p=>`<option ${p==x.place?'selected':''}>${esc(p)}</option>`).join('')}</select>`:`<input data-f="place" data-id="${x.id}" value="${esc(x.place)}" style="width:190px">`;
+   const tset=[...new Set(['Net7','Net15','Net30','Net45','Net60',x.terms])];
+   opts=`<div class="panel"><div><div class="opt">
+    <div><label>Place of supply</label>${places}</div>
+    <div><label>Terms of payment</label><input data-f="terms" data-id="${x.id}" value="${esc(x.terms)}" list="termsList" style="width:124px" placeholder="e.g. Net30" aria-label="Terms of payment" autocomplete="off"></div>
+    <div><label>Invoice date</label><input type="date" data-f="date" data-id="${x.id}" value="${x.date}"></div>
+    <div><label>Due date</label><input readonly style="width:110px" value="${days(x.terms)==null?'':addDays(x.date,days(x.terms))}"></div>
+    <div><label>Invoice no. (click to edit)</label><input data-f="number" data-id="${x.id}" readonly style="width:150px;cursor:pointer" value="${esc(x.numEdited?x.number:(pr[x.id]||''))}" placeholder="auto"></div>
+    <div><label>Withholding</label><span class="inline"><input type="checkbox" aria-label="Withholding" data-f="wh_on" data-id="${x.id}" ${x.wh_on?'checked':''}><input data-f="wh_pct" data-id="${x.id}" value="${esc(x.wh_pct)}" style="width:66px" ${x.wh_on?'':'disabled'} placeholder="%" aria-label="Withholding percent"><input data-f="wh_label" data-id="${x.id}" value="${esc(x.wh_label)}" style="width:300px" ${x.wh_on?'':'disabled'} aria-label="Withholding line text"></span></div>
+    <div class="calc">${c?`Tax ${cur(x.currency)}${fmt(c.tax,x.currency)}${x.wh_on?` &middot; Withheld ${cur(x.currency)}${fmt(c.wh,x.currency)}`:''}<b class="num">${cur(x.currency)}${fmt(c.bal,x.currency)}</b>`:''}</div>
+   </div></div></div>`}
+  d.innerHTML=`<div class="hd" data-tg="${x.id}" role="button" tabindex="0" aria-expanded="${open}" aria-label="Toggle details for ${esc(x.client)}">
+    <div class="no num">${String(x.id+1).padStart(2,'0')}</div>
+    <div class="cl"><b>${esc(x.client)}</b><span>${esc(x.legal||'')}</span></div>
+    <div class="it">${esc(x.item)}<em>${esc(x.month)}${x.hsn?' &middot; HSN '+esc(x.hsn):''}${x.po?' &middot; PO '+esc(x.po):''}</em></div>
+    <div class="pv"><span class="prov ${x.provider?esc(x.provider):'none'}">${x.provider?esc(x.provider):'No provider'}</span></div>
+    <div class="amt num">${x.amount==null?'-':cur(x.currency)+fmt(x.amount,x.currency)}<small>${c?'Due '+cur(x.currency)+fmt(c.bal,x.currency):''}</small></div>
+    <div class="chips">${chips}</div><div class="chev">${ic('chev')}</div></div>${opts}`;
+  list.appendChild(d)})}
+
+function renderAll(){ROWS.forEach(x=>x.sel=rowErrors(x).length==0);renderStats(true);renderList();FIRST=false;paintIcons()}
+function rerenderKeep(){const y=scrollY;ROWS.forEach(x=>x.sel=rowErrors(x).length==0);renderStats(false);renderList();scrollTo(0,y)}
+
+$('list').addEventListener('change',e=>{const t=e.target;if(!t.dataset.f)return;const x=ROWS[+t.dataset.id],f=t.dataset.f;
+ if(f=='terms'){const m=/^\s*net\s*-?\s*(\d+)\s*$/i.exec(t.value);if(m)t.value='Net'+m[1]}
+ if(f=='wh_on')x.wh_on=t.checked;else if(f=='number'){x.number=t.value.trim();x.numEdited=true}else x[f]=t.value;rerenderKeep()});
+$('list').addEventListener('click',e=>{const t=e.target.closest('[data-add],[data-tg],input[data-f=number]');if(!t)return;
+ if(t.dataset.add!==undefined){e.stopPropagation();openAdd(ROWS[+t.dataset.add]);return}
+ if(t.matches('input[data-f=number]')){if(t.readOnly&&confirm('You are editing the invoice number. It must stay unique. Are you sure?')){t.readOnly=false;t.style.cursor='text';const x=ROWS[+t.dataset.id];x.numEdited=true;x.number=t.value;t.focus()}return}
+ if(t.dataset.tg!==undefined){const id=+t.dataset.tg,card=t.closest('.inv');if(OPEN.has(id)){OPEN.delete(id);card.classList.remove('open')}else{OPEN.add(id);card.classList.add('open')}t.setAttribute('aria-expanded',OPEN.has(id))}});
+$('list').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.dataset.tg!==undefined){e.preventDefault();e.target.click()}});
+
+/* add client */
+const CF=[['short','Client Name (Short)'],['legal','Client Name (Legal)'],['provider','Service Provider (IAC / ITGS)'],['gstin','GSTIN'],['place','Place of Supply'],['gsttype','GST Type (IGST or CGST, SGST)'],['gstpct','GST %'],['terms','Terms of Payment (e.g. Net30)'],['withheld','Amount Withheld? (Yes/No)'],['whpct','% Withheld'],['po','PO Needed? (Yes/No)'],['active','Active? (Yes/No)'],['address','Address (optional)']];
+function openAdd(x){$('cform').innerHTML=CF.map(([k,l])=>`<div class="${k=='address'?'full':''}"><label for="cf_${k}">${l}</label><input id="cf_${k}"></div>`).join('');
+ $('cf_short').value=x.client;$('cf_legal').value=x.client;$('cf_active').value='Yes';$('cf_po').value='No';$('cf_withheld').value='No';msg('mc','');$('modal').classList.add('show');$('cf_legal').focus()}
+$('cCancel').onclick=()=>$('modal').classList.remove('show');
+$('cSave').onclick=async()=>{const b={};CF.forEach(([k])=>b[k]=$('cf_'+k).value.trim());
+ if(!b.short||!b.legal||!b.provider||!b.place||!b.terms){msg('mc','Short name, legal name, provider, place and terms are required.');return}
+ const r=await post('/api/add-client',b);if(!r.ok){msg('mc',r.error);return}$('modal').classList.remove('show');toast('Client added');await loadInvoices()};
+addEventListener('keydown',e=>{if(e.key==='Escape')$('modal').classList.remove('show')});
+
+/* ================= generate ================= */
+let busyT=null;
+function busy(on,n){const o=$('busy');if(!on){clearInterval(busyT);o.classList.remove('show');return}
+ o.classList.add('show');let p=0;const msgs=['Reading the Excel...','Checking every row...','Calculating tax and totals...','Numbering invoices...','Designing the invoices...','Creating PDFs...','Almost there...'];
+ const set=v=>{$('ringFg').style.strokeDashoffset=226*(1-v/100);$('ringTxt').textContent=Math.round(v)+'%'};set(2);$('busyTitle').textContent=`Creating ${n} invoice${n>1?'s':''}`;
+ const total=Math.max(4000,n*1500),t0=Date.now();busyT=setInterval(()=>{const k=Math.min((Date.now()-t0)/total,1);p=Math.min(92,92*(1-Math.pow(1-k,2)));set(p);$('busyMsg').textContent=msgs[Math.min(msgs.length-1,Math.floor(p/14))]},350)}
+$('genBtn').onclick=async()=>{
+ const bad=ROWS.filter(x=>rowErrors(x).length);if(bad.length){msg('m2','Fix the red rows first: correct the Excel and click Reload, or use Add client / enter the withholding %.');return}
+ msg('m2','');busy(true,ROWS.length);$('genBtn').disabled=true;
+ const r=await post('/api/generate',{rows:ROWS.map(x=>({id:x.id,place:x.place,terms:x.terms,date:x.date,wh_on:x.wh_on,wh_pct:x.wh_pct,wh_label:x.wh_label,number:x.numEdited?x.number:'',number_edited:x.numEdited}))});
+ if(r.ok){$('ringFg').style.strokeDashoffset=0;$('ringTxt').textContent='100%';$('busyMsg').textContent='Done';await new Promise(s=>setTimeout(s,450))}
+ busy(false);$('genBtn').disabled=false;
+ if(!r.ok){msg('m2',r.error);return}
+ const failed=r.results.filter(z=>!z.ok);msg('m2',failed.map(z=>`Row ${z.id+1}: ${z.error}`).join('  |  '));
+ RES=r.results.filter(z=>z.ok);NUMS=r.numbers;BATCH=r.batch;VERD={};CUR=0;if(!RES.length)return;buildReview();show(3)};
+
+/* ================= STEP 3: review ================= */
+function buildReview(){
+ const z=RES[CUR],x=ROWS[z.id],c=z.currency,done=RES.filter(q=>VERD[q.id]).length,v=VERD[z.id];
+ $('pills').innerHTML=RES.map((q,i)=>`<button class="rtab ${VERD[q.id]==='ok'?'ok':VERD[q.id]==='no'?'no':''} ${i==CUR?'cur':''}" data-i="${i}"><span class="d"></span>${esc(q.number)} &middot; ${esc(q.client)}</button>`).join('');
+ $('pdf').src=`/pdf/${BATCH}/${z.id}?t=${z.v||0}#toolbar=0&navpanes=0&view=FitH`;
+ $('eWhOn').checked=!!z.wh_on;$('eWhPct').value=z.wh_on?z.wh_pct:'';$('eWhLabel').value=z.wh_label||'';$('eTerms').value=z.terms;$('eDate').value=z.date.split('/').reverse().join('-');$('ePlace').value=z.place;msg('mEdit','');$('fileCap').textContent=z.file;
+ $('provBadge').innerHTML=`<span class="prov ${esc(z.provider)}">${esc(z.provider)}</span>`;
+ $('verdict').className='chip '+(v==='ok'?'ok':v==='no'?'err':'mut');$('verdict').innerHTML=v==='ok'?ic('check')+'Marked correct':v==='no'?ic('x')+'Marked incorrect':'Not reviewed';
+ $('revNum').textContent=z.number;$('revClient').textContent=z.client_legal;
+ const R=(a,b,cls)=>`<tr class="${cls||''}"><td>${esc(a)}</td><td>${esc(b)}</td></tr>`,S=a=>`<tr class="sect"><td colspan="2">${a}</td></tr>`;
+ $('kv').innerHTML=S('Invoice')+R('Place of supply',z.place)+R('Invoice date',z.date)+R('Terms of payment / due',z.terms+' / '+z.due)+(z.po?R('PO number',z.po):'')
+  +S('From your sheet')+R('Amount',cur(c)+fmt(x.amount,c))+R('Item',x.item)+R('Notes',x.notes||'-')+R('Include in name',x.month)+R('HSN/SAC',z.hsn||'-')
+  +S('Totals')+z.tax.map(t=>R(t.label,cur(c)+fmt(t.amount,c))).join('')+(z.wh_on?R('Withheld ('+z.wh_pct+'%)','(-) '+cur(c)+fmt(z.withheld,c)):'')+R('Balance due',cur(c)+fmt(z.balance,c),'tot');
+ const sb=$('sidebox');sb.classList.remove('slide');void sb.offsetWidth;sb.classList.add('slide');
+ $('revBar').style.width=(done/RES.length*100)+'%';$('finHint').textContent=`${done} of ${RES.length} reviewed`;
+ $('finBtn').disabled=done<RES.length;$('prevBtn').disabled=CUR==0;$('nextBtn').disabled=CUR==RES.length-1;
+ const cp=$('pills').querySelector('.cur');if(cp)cp.scrollIntoView({inline:'center',block:'nearest',behavior:reduced?'auto':'smooth'});paintIcons()}
+$('pills').onclick=e=>{const b=e.target.closest('[data-i]');if(b){CUR=+b.dataset.i;buildReview()}};
+function mark(v){VERD[RES[CUR].id]=v;buildReview();if(CUR<RES.length-1)setTimeout(()=>{CUR++;buildReview()},500)}
+$('okBtn').onclick=()=>mark('ok');$('noBtn').onclick=()=>mark('no');
+$('prevBtn').onclick=()=>{if(CUR>0){CUR--;buildReview()}};$('nextBtn').onclick=()=>{if(CUR<RES.length-1){CUR++;buildReview()}};
+addEventListener('keydown',e=>{if(CURV!==3||/INPUT|SELECT|TEXTAREA/.test(e.target.tagName))return;
+ if(e.key==='ArrowRight')$('nextBtn').click();else if(e.key==='ArrowLeft')$('prevBtn').click();else if(e.key.toLowerCase()==='c')mark('ok');else if(e.key.toLowerCase()==='i')mark('no')});
+$('eApply').onclick=async()=>{
+ const z=RES[CUR],b=$('eApply');b.disabled=true;
+ const tm=/^\s*net\s*-?\s*(\d+)\s*$/i.exec($('eTerms').value);if(tm)$('eTerms').value='Net'+tm[1];
+ const r=await post('/api/regenerate',{batch:BATCH,id:z.id,wh_on:$('eWhOn').checked,wh_pct:$('eWhPct').value,wh_label:$('eWhLabel').value,terms:$('eTerms').value.trim(),place:$('ePlace').value.trim(),date:$('eDate').value});
+ b.disabled=false;if(!r.ok){msg('mEdit',r.error);return}
+ Object.assign(z,r.result);z.v=(z.v||0)+1;delete VERD[z.id];toast('Invoice updated');buildReview()};
+$('finBtn').onclick=async()=>{
+ const ok=RES.filter(z=>VERD[z.id]==='ok').map(z=>z.id);if(!ok.length){msg('m3','No invoice is marked correct.');return}
+ const r=await post('/api/finalize',{batch:BATCH,correct:ok});if(!r.ok){msg('m3',r.error);return}
+ const left=RES.length-ok.length;
+ $('doneSub').textContent=`${r.files.length} invoice${r.files.length>1?'s':''} saved${left?`, ${left} left out as incorrect`:''}`;
+ $('doneBody').innerHTML=`<div style="margin:22px 0 8px"><a class="btn pri lg" href="/download/${encodeURIComponent(r.zip)}">${ic('download')}Download ${esc(r.zip)}</a></div>
+  <div style="color:var(--faint);font-size:12px">Saved in ${esc(r.outputs)}</div>
+  <div class="files">${r.files.map((f,i)=>`<a class="file" style="--i:${i}" href="/download/${encodeURIComponent(r.folder)}/${encodeURIComponent(f)}">${ic('file')}<span>${esc(f)}</span>${ic('download')}</a>`).join('')}</div>`;
+ show(4);setTimeout(confetti,300)};
+$('openBtn').onclick=()=>post('/api/open-outputs');
+/* Start again: from any step, back to the home page with a clean slate */
+function goHome(){
+ if(CURV===3&&Object.keys(VERD).length&&!confirm('Go back to the home page? The invoices you are reviewing will not be downloaded. Their invoice numbers stay used.'))return;
+ busy(false);$('modal').classList.remove('show');
+ ROWS=[];RES=[];VERD={};BATCH='';CUR=0;OPEN=new Set();FIRST=true;FRESH=true;WZ.payload=null;WZ.cols=null;WZ.done={};WZ.lastRows=null;
+ ['m1','m2','m3'].forEach(i=>msg(i,''));
+ $('pdf').removeAttribute('src');
+ refreshStatus();show(1)}
+$('againBtn').onclick=goHome;$('homeBtn').onclick=goHome;$('hlogo').onclick=goHome;document.querySelector('.brandtxt').onclick=goHome;
+
+/* ================= import wizard: data, tabs, columns ================= */
+const WZ={step:1,src:'file',payload:null,tabs:{},cols:null,done:{},busy:false};
+const WZ_STEPS=[['Add data','Choose your file or sheet'],['Match tabs','Tell us which tab is which'],['Match columns','Check each column']];
+const WZ_OTHER=[
+ {kind:'logo',input:'wzLogoIn',icon:'image',title:'Logo',fmts:['PNG','JPG','WEBP'],desc:'One logo is used on every invoice. Transparent PNG looks best.'},
+ {kind:'signature',input:'wzSignIn',icon:'pen',title:'Signature',fmts:['PNG','JPG','WEBP'],desc:'Placed above the Authorized Signature line. Transparent PNG looks best.'}
+];
+const WZ_ROLES=[
+ ['invoices','Invoices to generate','The list of invoices you want to create','receipt',true],
+ ['clients','Client Master','Your clients: GSTIN, place, terms, provider','building',true],
+ ['providers','Service Providers','IAC and ITGS company and bank details','shield',true],
+ ['settings','Settings','GST rate and labels, not needed to start','hash',false]
+];
+function openWiz(step){WZ.step=step||1;WZ.busy=false;if(WZ.payload)WZ.src=WZ.payload.source.type;$('wiz').classList.add('show');renderWiz()}
+function closeWiz(){$('wiz').classList.remove('show')}
+$('wizClose').onclick=closeWiz;
+
+function wzHead(){
+ $('wizSub').textContent=`Step ${WZ.step} of 3 · ${WZ_STEPS[WZ.step-1][1]}`;
+ $('wsteps').innerHTML=WZ_STEPS.map((s,i)=>`<div class="ws ${i+1==WZ.step?'on':i+1<WZ.step?'done':''}"><b>${i+1<WZ.step?ic('check'):i+1}</b><span>${s[0]}</span></div>`).join('<i class="wsl"></i>')}
+
+function wzBody(html){const b=$('wizBody');b.style.animation='none';void b.offsetWidth;b.style.animation='';b.innerHTML=html;b.scrollTop=0}
+
+function renderWiz(){
+ wzHead();
+ const foot=$('wizFoot'),P=WZ.payload;
+ if(WZ.step===1){
+  const fileOk=P&&P.source.type==='file',gOk=P&&P.source.type==='google';
+  const panel=WZ.src==='file'
+   ?(fileOk?`<div class="drop ok" id="wzDrop"><div class="dico">${ic('check')}</div><div class="dt">${esc(P.source.name)}</div>
+       <div class="chips2"><span class="chip ok">${P.tabs.length} tabs found</span>${P.tabs.slice(0,4).map(t=>`<span class="chip mut">${esc(t.name)}</span>`).join('')}</div>
+       <div class="ds"><u id="wzAgain" style="cursor:pointer">Choose a different file</u></div></div>`
+     :`<div class="drop" id="wzDrop" tabindex="0" role="button" aria-label="Choose an Excel file"><div class="dico">${ic('upload')}</div><div class="dt">Drop your Excel file here</div><div class="ds">or <u>browse your computer</u></div>
+       <div class="fmts"><span class="fmt">.XLSX</span></div>
+       <div class="dn">One workbook with all your tabs: invoices to generate, clients and service providers. A settings tab is optional.</div></div>`)
+   :`<div class="gbox"><div class="glabel">Google Sheet link</div>
+      <div class="ginput"><div class="wrap">${ic('link')}<input id="wzUrl" placeholder="https://docs.google.com/spreadsheets/d/..." value="${esc(gOk?P.source.url:'')}" aria-label="Google Sheet link"></div><button class="pri" id="wzFetch">${ic('refresh')}Fetch sheet</button></div>
+      ${gOk?`<div style="margin-top:12px"><span class="chip ok">${ic('check')}Sheet loaded, ${P.tabs.length} tabs found</span></div>`:''}
+      <ol class="how"><li><i>1</i><span>Open your sheet and click <b>Share</b>.</span></li><li><i>2</i><span>Under General access choose <b>Anyone with the link</b> and the role <b>Viewer</b>.</span></li><li><i>3</i><span>Copy the link and paste it above. Every tab is read automatically.</span></li></ol></div>`;
+  wzBody(`<div class="seg" role="tablist"><button class="segb ${WZ.src==='file'?'on':''}" data-src="file" role="tab">${ic('sheet')}Excel workbook</button><button class="segb ${WZ.src==='google'?'on':''}" data-src="google" role="tab">${ic('link')}Google Sheet</button></div>
+   ${panel}
+   <div class="klabel"><span class="k">Other files</span><i></i><span class="chip mut">optional, add now or later</span></div>
+   <div class="opts3">${WZ_OTHER.map(assetCard).join('')}${lastCard()}</div>
+   <div class="msg" id="wzMsg" role="alert"></div>`);
+  foot.innerHTML=`<button id="wzCancel">Cancel</button><span class="note ${P?'ok':''}">${P?ic('check')+'Ready for the next step':'Choose a file or paste a link to continue'}</span><button class="pri" id="wzNext" ${P?'':'disabled'}>Next${ic('right')}</button>`;
+  document.querySelectorAll('.segb').forEach(b=>b.onclick=()=>{WZ.src=b.dataset.src;renderWiz()});
+  const drop=$('wzDrop');
+  if(drop){
+   if(!(WZ.src==='file'&&fileOk)){drop.onclick=()=>$('wzFileIn').click();drop.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('wzFileIn').click()}}}
+   drop.ondragover=e=>{e.preventDefault();drop.classList.add('drag')};drop.ondragleave=()=>drop.classList.remove('drag');
+   drop.ondrop=e=>{e.preventDefault();drop.classList.remove('drag');wzFile(e.dataTransfer.files[0])}}
+  if($('wzAgain'))$('wzAgain').onclick=()=>$('wzFileIn').click();
+  if($('wzFetch')){$('wzFetch').onclick=wzFetch;$('wzUrl').onkeydown=e=>{if(e.key==='Enter')wzFetch()}}
+  document.querySelectorAll('[data-wzo]').forEach(b=>{b.onclick=()=>$(WZ_OTHER.find(o=>o.kind===b.dataset.wzo).input).click();b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();b.click()}}});
+  document.querySelectorAll('[data-drop-o]').forEach(c=>{
+   c.ondragover=e=>{e.preventDefault();c.classList.add('drag')};c.ondragleave=()=>c.classList.remove('drag');
+   c.ondrop=e=>{e.preventDefault();c.classList.remove('drag');wzOther(c.dataset.dropO,e.dataTransfer.files[0])}});
+  wireLast();
+  $('wzCancel').onclick=closeWiz;$('wzNext').onclick=()=>{WZ.step=2;renderWiz()};
+ }
+ else if(WZ.step===2){
+  const names=P.tabs.map(t=>t.name);
+  const roleHtml=WZ_ROLES.map(([r,t,d,icn,req])=>{
+   const cur=WZ.tabs[r],tb=P.tabs.find(x=>x.name===cur),auto=cur&&cur===P.suggest[r];
+   const chip=!cur&&req?`<span class="chip err">${ic('alert')}Choose a tab</span>`:!cur?`<span class="chip mut">Not used</span>`:auto?`<span class="chip ok">${ic('check')}Matched automatically</span>`:`<span class="chip info">${ic('pen')}Changed by you</span>`;
+   return `<div class="rcard"><div class="rl"><span class="oico">${ic(icn)}</span><div><b>${t}${req?'<span class="req">*</span>':''}</b><div class="rs">${d}</div></div></div>
+     <div class="rr"><select data-tab="${r}" class="${req&&!cur?'need':''}" aria-label="Tab for ${t}">${req&&!cur?'<option value="" selected>Choose a tab</option>':''}${!req?`<option value="">None</option>`:''}${names.map(n=>`<option ${n===cur?'selected':''}>${esc(n)}</option>`).join('')}</select>${chip}</div>
+     <div class="rc"><span class="k">Columns in that tab</span><div class="tabhead">${tb?(tb.headers.map(h=>`<span>${esc(h)}</span>`).join('')||'<span>(empty tab)</span>'):'<span>-</span>'}</div></div></div>`}).join('');
+  wzBody(`<p class="lead">We matched your tabs automatically. Change any that look wrong, then continue to match the columns.</p>${roleHtml}<div class="msg" id="wzMsg" role="alert"></div>`);
+  const ok=!!(WZ.tabs.invoices&&WZ.tabs.clients&&WZ.tabs.providers);
+  foot.innerHTML=`<button id="wzBack">${ic('left')}Back</button><span class="note ${ok?'ok':'bad'}">${ok?ic('check')+'All required tabs chosen':ic('alert')+'Choose a tab for every required item'}</span><button class="pri" id="wzNext" ${ok?'':'disabled'}>Next${ic('right')}</button>`;
+  document.querySelectorAll('[data-tab]').forEach(s=>s.onchange=()=>{WZ.tabs[s.dataset.tab]=s.value||null;WZ.cols=null;renderWiz()});
+  $('wzBack').onclick=()=>{WZ.step=1;renderWiz()};$('wzNext').onclick=wzToColumns;
+ }
+ else{
+  const C=WZ.cols,F=P.fields,RR=['invoices','clients','providers'];
+  const total=RR.reduce((n,r)=>n+F[r].filter(f=>f.required).length,0),got=RR.reduce((n,r)=>n+F[r].filter(f=>f.required&&C[r].map[f.key]).length,0),full=got===total;
+  const secs=RR.map(r=>`<div class="role"><h4>${P.titles[r]}<span class="chip mut">tab: ${esc(WZ.tabs[r])}</span></h4>
+   <table class="maptbl"><thead><tr><th>Field in the invoice tool</th><th>Column in your sheet</th><th>Example from your first row</th></tr></thead><tbody>
+   ${F[r].map(f=>{const cur=C[r].map[f.key],miss=f.required&&!cur;
+     return `<tr><td class="f">${cur?`<span class="ok">${ic('check')}</span>`:`<span class="dot"></span>`}${esc(f.label)}${f.required?'<span class="req">*</span>':''}</td>
+     <td class="c"><select data-r="${r}" data-k="${f.key}" class="${miss?'need':''}" aria-label="${esc(f.label)}"><option value="">${f.required?'Choose a column':'Not in my sheet'}</option>${C[r].headers.map(h=>`<option ${h===cur?'selected':''}>${esc(h)}</option>`).join('')}</select></td>
+     <td class="ex">${cur?esc(C[r].samples[cur]||''):''}</td></tr>`}).join('')}
+   </tbody></table></div>`).join('');
+  wzBody(`<div class="sumbar ${full?'full':''}"><div class="tx"><b>${got} of ${total}</b> required fields matched</div><div class="progress"><i style="width:${total?got/total*100:0}%"></i></div></div>
+   <p class="lead" style="margin-top:-4px">We matched your columns automatically. Check each one and change it if needed. Fields marked <span class="req">*</span> are required.</p>${secs}<div class="msg" id="wzMsg" role="alert"></div>`);
+  foot.innerHTML=`<button id="wzBack">${ic('left')}Back</button><span class="note ${full?'ok':'bad'}">${full?ic('check')+'All required fields matched':ic('alert')+(total-got)+' required field'+(total-got>1?'s':'')+' still need a column'}</span><button class="pri" id="wzSave" ${full?'':'disabled'}>${ic('check')}Confirm and load invoices</button>`;
+  document.querySelectorAll('select[data-k]').forEach(s=>s.onchange=()=>{C[s.dataset.r].map[s.dataset.k]=s.value||null;const y=$('wizBody').scrollTop;renderWiz();$('wizBody').scrollTop=y});
+  $('wzBack').onclick=()=>{WZ.step=2;renderWiz()};$('wzSave').onclick=wzSave;
+ }
+ paintIcons($('wiz'))}
+
+function assetCard(o){
+ const A=window.ASSET||{},isLogo=o.kind==='logo',has=isLogo?A.logo:A.sign,v=isLogo?A.v:A.sv,src=isLogo?'/logo-ui':'/signature';
+ const saved=!!has||!!WZ.done[o.kind];
+ return `<div class="ofile ${saved?'ok':''}" data-drop-o="${o.kind}">
+  <div class="oh"><span class="oico">${ic(saved?'check':o.icon)}</span><span class="t">${o.title}</span></div>
+  <div class="od">${o.desc}</div>
+  <div class="pvbox ${saved?'has':''}" data-wzo="${o.kind}" role="button" tabindex="0" aria-label="Choose a ${o.title.toLowerCase()} file">${saved?`<img src="${src}?v=${v||0}" alt="${o.title} preview">`:`<div class="hint">${ic('upload')}<span>Drop a file here</span><span class="fmts">${o.fmts.map(f=>`<span class="fmt">${f}</span>`).join('')}</span></div>`}</div>
+  <div class="of">${saved?`<span class="chip ok" title="${esc(WZ.done[o.kind]||'')}">${ic('check')}${esc(WZ.done[o.kind]||'Saved')}</span>`:`<span class="chip mut">Not added</span>`}<button class="sm" data-wzo="${o.kind}">${ic('upload')}${saved?'Change':'Choose file'}</button></div></div>`}
+const LAST_EX={IAC:'e.g. INV-000152',ITGS:'e.g. ITGS-1009'};
+function lastRowsInit(){
+ if(WZ.lastRows)return;
+ const saved=window.LASTNUM||{},keys=Object.keys(saved);
+ WZ.lastRows=(keys.length?keys:['IAC','ITGS']).map(k=>({k,v:saved[k]||'',fixed:true}))}
+function lastCard(){
+ lastRowsInit();
+ const any=WZ.lastRows.some(r=>r.v);
+ return `<div class="ofile ${any?'ok':''}" id="lastCard">
+  <div class="oh"><span class="oico">${ic(any?'check':'hash')}</span><span class="t">Last invoice numbers</span></div>
+  <div class="od">Type the last number you issued for each provider. New invoices continue from it.</div>
+  <div class="lrows">${WZ.lastRows.map((r,i)=>`<label class="lrow">${r.fixed?`<span class="prov ${esc(r.k)}">${esc(r.k)}</span>`:`<input class="pname" data-lk="${i}" value="${esc(r.k)}" placeholder="NAME" aria-label="Provider name">`}<input data-lv="${i}" value="${esc(r.v)}" placeholder="${esc(LAST_EX[r.k]||'e.g. ABC-0100')}" aria-label="Last invoice number for ${esc(r.k||'new provider')}"></label>`).join('')}</div>
+  <div class="of"><span class="chip ${any?'ok':'mut'}" id="lastChip">${any?ic('check')+'Saved':'Not entered'}</span><button class="sm" id="lastAdd">${ic('plus')}Add provider</button></div></div>`}
+function wireLast(){
+ document.querySelectorAll('[data-lv]').forEach(i=>i.onchange=()=>{WZ.lastRows[+i.dataset.lv].v=i.value.trim();saveLast()});
+ document.querySelectorAll('[data-lk]').forEach(i=>i.onchange=()=>{const r=WZ.lastRows[+i.dataset.lk];r.k=i.value.trim().toUpperCase();i.value=r.k;saveLast()});
+ const add=$('lastAdd');if(add)add.onclick=()=>{WZ.lastRows.push({k:'',v:'',fixed:false});renderWiz();const ins=document.querySelectorAll('[data-lk]');if(ins.length)ins[ins.length-1].focus()}}
+async function saveLast(){
+ const numbers={};WZ.lastRows.forEach(r=>{if(r.k&&r.v)numbers[r.k]=r.v});
+ if(!Object.keys(numbers).length)return;
+ const chip=$('lastChip'),r=await post('/api/last-numbers',{numbers});
+ if(!r.ok){if(chip){chip.className='chip err';chip.textContent='Needs a digit'}wzMsg(r.error);return}
+ wzMsg('');if(chip){chip.className='chip ok';chip.innerHTML=ic('check')+'Saved'}
+ const c=$('lastCard');if(c)c.classList.add('ok');
+ window.LASTNUM=r.numbers;refreshStatus()}
+function wzMsg(t,info){const m=$('wzMsg');if(!m)return;m.className='msg'+(t?' show':'')+(info?' info':'');m.innerHTML=t?ic(info?'clock':'alert')+`<span>${esc(t)}</span>`:''}
+function wzSetPayload(p){WZ.payload=p;WZ.src=p.source.type;WZ.tabs={...p.suggest};WZ.cols=null;toast('Data loaded, '+p.tabs.length+' tabs found')}
+
+async function wzFile(f){
+ if(!f)return;WZ.src='file';wzMsg('Reading '+f.name+'...',true);
+ const r=await upload('workbook',f);if(!r.ok){wzMsg(r.error);return}
+ wzSetPayload(r);WZ.step=1;renderWiz()}
+async function wzFetch(){
+ const url=$('wzUrl').value.trim();if(!url){wzMsg('Paste your Google Sheet link first.');return}
+ wzMsg('Reading the Google Sheet...',true);$('wzFetch').disabled=true;
+ const r=await post('/api/source/google',{url});if($('wzFetch'))$('wzFetch').disabled=false;
+ if(!r.ok){wzMsg(r.error);return}
+ wzSetPayload(r);renderWiz()}
+async function wzOther(kind,f){
+ if(!f)return;const r=await upload(kind,f);if(!r.ok){wzMsg(r.error);return}
+ WZ.done[kind]=f.name;toast(f.name+' added');await refreshStatus();renderWiz()}
+async function wzToColumns(){
+ $('wzNext').disabled=true;
+ if(!WZ.cols){const r=await post('/api/source/columns',{tabs:WZ.tabs});if(!r.ok){wzMsg(r.error);$('wzNext').disabled=false;return}WZ.cols=r.columns}
+ WZ.step=3;renderWiz()}
+async function wzSave(){
+ const b=$('wzSave');b.disabled=true;b.innerHTML='Checking your data...';
+ const columns={};['invoices','clients','providers'].forEach(r=>columns[r]=WZ.cols[r].map);
+ const r=await post('/api/source/save',{source:WZ.payload.source,tabs:WZ.tabs,columns});
+ if(!r.ok){wzMsg(r.error);b.disabled=false;b.innerHTML=ic('check')+'Confirm and load invoices';return}
+ closeWiz();FRESH=false;toast('Data connected: '+r.summary.invoices+' invoices, '+r.summary.clients+' clients');
+ await refreshStatus();await loadInvoices()}
+
+$('wzFileIn').onchange=async e=>{const f=e.target.files[0];e.target.value='';await wzFile(f)};
+[['wzLogoIn','logo'],['wzSignIn','signature']].forEach(([id,kind])=>{
+ $(id).onchange=async e=>{const f=e.target.files[0];e.target.value='';await wzOther(kind,f)}});
+
+document.addEventListener("click",e=>{if(e.target.closest("[data-wiz]"))openWiz(1);else if(e.target.closest("#loadBtn"))loadInvoices()});
+addEventListener("keydown",e=>{if(e.key==="Escape")closeWiz()});
+
+paintIcons();show(1);
+refreshStatus().then(s=>{if(s.inputs)loadInvoices()});
+</script>
+</body></html>

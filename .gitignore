@@ -1,0 +1,8 @@
+Outputs/
+Inputs/backup/
+Inputs/google_source.xlsx
+Inputs/issued_numbers.log
+Inputs/*.xlsx
+Inputs/signature.png
+__pycache__/
+*.pyc

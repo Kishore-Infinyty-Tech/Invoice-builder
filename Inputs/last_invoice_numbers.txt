@@ -1,0 +1,5 @@
+# Last invoice number issued for each service provider (one per line, PROVIDER=NUMBER).
+# The tool updates this file every time invoices are generated.
+# To continue from a different number, edit the value after the = sign.
+IAC=INV-000155
+ITGS=ITGS-1014

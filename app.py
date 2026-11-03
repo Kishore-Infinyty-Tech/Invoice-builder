@@ -1,4 +1,4 @@
-"""Invoice tool: local web app. Run with Start Invoice Tool.bat (or: python app.py).
+"""Invoice tool: local web app. Run with start.bat (or: python app.py).
 
 Everything lives in this folder:
   Inputs/   Invoice Generation Inputs.xlsx   tabs: Invoices To Generate, Client Master, Service Provider, Settings

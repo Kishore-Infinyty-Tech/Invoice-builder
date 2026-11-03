@@ -1,6 +1,6 @@
 INVOICE TOOL  (everything is in this one folder)
 
-START      Double-click "Start Invoice Tool.bat". The page opens in your browser and loads the invoices straight away.
+START      Double-click "start.bat". The page opens in your browser and loads the invoices straight away.
 STOP       Close the black window.
 
 INPUT FILES (Inputs folder)
@@ -32,6 +32,6 @@ FILE NAMES   ITGS-1009 ShortClientName CustomString.pdf   and   INV-000152 Short
 ON A NEW COMPUTER (needed once)
   1. Install Python 3 from https://www.python.org/downloads/  (tick "Add python.exe to PATH").
   2. Have Microsoft Edge or Google Chrome installed (it makes the PDFs and shows the page).
-  3. Double-click "Start Invoice Tool.bat". On the very first start it installs two small helper
+  3. Double-click "start.bat". On the very first start it installs two small helper
      packages (openpyxl, Pillow) and needs the internet for that. After that it works without it.
   Windows: use the .bat file.   Mac / Linux: open a terminal in this folder and run:  python3 app.py

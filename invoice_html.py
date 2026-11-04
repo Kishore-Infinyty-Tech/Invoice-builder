@@ -218,8 +218,9 @@ def render_invoice(d, logo_uri, sign_uri):
             items.append((label, p[key], wide))
     for label, val, wide in items:
         bank.append(f'<div class="pi{" wide" if wide else ""}"><span>{label}</span><b>{e(val)}</b></div>')
-    if p.get("account_text"):  # free-text account details, printed exactly as written in the Excel
-        txt_lines = "<br>".join(e(x.strip()) for x in p["account_text"].splitlines() if x.strip())
+    acct = (p.get("account_text_intl") if cur != "INR" else "") or p.get("account_text")  # non-INR invoices use the Non_India account details
+    if acct:  # free-text account details, printed exactly as written in the Excel
+        txt_lines = "<br>".join(e(x.strip()) for x in acct.splitlines() if x.strip())
         bank.append(f'<div class="pi wide"><b style="font-weight:600;line-height:1.55">{txt_lines}</b></div>')
     bank_html = f'<div class="card"><div class="t">Payment details</div><div class="pay">{"".join(bank)}</div></div>' if bank else ""
     tl = d.get("terms_list") or []

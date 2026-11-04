@@ -115,6 +115,7 @@ SP_ALIASES = {
     "swift": ["swiftcode", "swift"],
     "acc_type": ["accounttype"],
     "account_text": ["accountdetails"],
+    "account_text_intl": ["nonindiaaccountdetails", "nonindianaccountdetails", "internationalaccountdetails"],
 }
 INV_ALIASES = {
     "client": ["clientname", "client"],
@@ -719,7 +720,7 @@ FIELD_LABELS = {
                 "terms": "Payment terms", "withheld": "Amount withheld?", "whpct": "% withheld", "po": "PO needed?",
                 "active": "Active?", "address": "Address (optional)"},
     "providers": {"short": "Company name (short)", "legal": "Company name (legal)", "address": "Address",
-                  "gstin": "GSTIN", "phone": "Phone", "email": "Email", "account_text": "Account details (free text)",
+                  "gstin": "GSTIN", "phone": "Phone", "email": "Email", "account_text": "Account details (free text)", "account_text_intl": "Non-India account details (free text)",
                   "account": "Account number", "ifsc": "IFSC", "account_name": "Name on account",
                   "website": "Website", "bank": "Bank name", "branch": "Branch", "swift": "Swift code",
                   "acc_type": "Account type"},
